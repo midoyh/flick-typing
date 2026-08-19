@@ -36,7 +36,7 @@ button:active{transform:scale(.98)}
 .start p{color:var(--muted);line-height:1.7}
 .settings{display:flex;gap:8px;margin:12px 0}.settings button{height:42px;font-size:13px}.settings button.selected{outline:2px solid var(--accent);background:#075985}
 .result{text-align:center}.result .score{font-size:58px;font-weight:900;margin:8px 0;color:var(--gold)}
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.result-item{background:#0f172a;border-radius:14px;padding:13px}.result-item small{display:block;color:var(--muted)}.result-item b{font-size:24px}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.result-item{background:#0f172a;border-radius:14px;padding:13px 8px}.result-item small{display:block;color:var(--muted);font-size:11px}.result-item b{font-size:20px}
 footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 .hidden{display:none!important}
 </style>
@@ -59,7 +59,7 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 <section id="gameScreen" class="screen">
 <div class="stats">
 <div class="stat"><small>残り時間</small><b id="time">30</b></div>
-<div class="stat"><small>スコア</small><b id="score">0</b></div>
+<div class="stat"><small>入力文字数</small><b id="totalChars">0</b></div>
 <div class="stat"><small>正解</small><b id="correct">0</b></div>
 </div>
 <div class="card">
@@ -70,7 +70,10 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 </div>
 <div id="feedback" class="feedback"></div>
 <div id="combo"></div>
-<button id="skipBtn">この問題をスキップ</button>
+<div class="actions">
+<button id="skipBtn">スキップ</button>
+<button id="inGameHomeBtn">タイトルへ</button>
+</div>
 </div>
 </section>
 
@@ -78,11 +81,10 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 <div class="card result">
 <div>RESULT</div>
 <div id="finalScore" class="score">0</div>
-<div>ポイント</div>
+<div>入力文字数</div>
 <div class="result-grid">
-<div class="result-item"><small>正解数</small><b id="finalCorrect">0</b></div>
-<div class="result-item"><small>正確率</small><b id="finalAccuracy">0%</b></div>
-<div class="result-item"><small>文字/分</small><b id="finalCPM">0</b></div>
+<div class="result-item"><small>入力文字数</small><b id="finalChars">0</b></div>
+<div class="result-item"><small>文字/10秒</small><b id="finalSpeed">0</b></div>
 <div class="result-item"><small>最大コンボ</small><b id="finalCombo">0</b></div>
 </div>
 <div class="actions"><button id="retryBtn" class="primary">もう一度</button><button id="homeBtn">タイトルへ</button></div>
@@ -106,19 +108,21 @@ const WORDS = [
 ];
 
 const $=id=>document.getElementById(id);
-let duration=30,timeLeft=30,timer=null,current="",score=0,correct=0,attempts=0,combo=0,maxCombo=0,startedAt=0;
+let duration=30,timeLeft=30,timer=null,current="",totalChars=0,correct=0,attempts=0,combo=0,maxCombo=0,startedAt=0;
 let lastIndex=-1;
+let isProcessing=false; // 連打・過剰発火防止フラグ
 
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
 function pickWord(){
+ isProcessing = false;
  let i; do{i=Math.floor(Math.random()*WORDS.length)}while(i===lastIndex&&WORDS.length>1);
  lastIndex=i; current=WORDS[i]; $("target").textContent=current;
  $("answer").value=""; $("feedback").textContent=""; $("answer").className="";
  $("combo").textContent=combo>=2?`${combo} COMBO`:"";
 }
-function updateStats(){$("time").textContent=timeLeft;$("score").textContent=score;$("correct").textContent=correct}
+function updateStats(){$("time").textContent=timeLeft;$("totalChars").textContent=totalChars;$("correct").textContent=correct}
 function startGame(){
- clearInterval(timer); timeLeft=duration;score=0;correct=0;attempts=0;combo=0;maxCombo=0;lastIndex=-1;startedAt=Date.now();
+ clearInterval(timer); timeLeft=duration;totalChars=0;correct=0;attempts=0;combo=0;maxCombo=0;lastIndex=-1;startedAt=Date.now();
  show("gameScreen");updateStats();pickWord();
  setTimeout(()=>{$("answer").focus()},100);
  timer=setInterval(()=>{timeLeft--;updateStats();if(timeLeft<=0)endGame()},1000);
@@ -127,52 +131,68 @@ function normalize(s){return s.trim().replace(/\s+/g,"")}
 
 // 「次の文字が打たれたタイミングで判定する」判定関数
 function isInputValid(input, target){
- // 完全一致・前置一致ならOK
  if(target.startsWith(input)) return true;
- 
- // 入力長がお題より長い場合はNG
  if(input.length > target.length) return false;
  
- // 確定済みの文字（末尾以外の文字）がお題と一致しているか確認
  const confirmedInput = input.slice(0, -1);
  const confirmedTarget = target.slice(0, input.length - 1);
  
- // 末尾の1文字より前の部分で相違があればミス
  if(confirmedInput !== confirmedTarget) return false;
- 
- // 末尾の1文字（入力途中の文字）は一旦エラーにせず許容する
  return true;
 }
 
 function answerChanged(){
- if(!current||timeLeft<=0)return;
+ if(!current||timeLeft<=0||isProcessing)return;
  const v=normalize($("answer").value);
  if(v==="")return;
  attempts++;
+ 
  if(v===current){
+   isProcessing = true; // 次のお題への切り替え中の処理重複を防ぐ
    correct++;combo++;maxCombo=Math.max(maxCombo,combo);
-   score += current.length*10 + Math.min(combo,20)*5;
-   $("answer").className="good";$("feedback").textContent="🎉 正解！";
+   totalChars += current.length; // 入力文字数を加算
+   $("answer").className="good";
+   $("answer").value=""; // 即座に入力欄をクリア
    updateStats();
-   setTimeout(()=>{if(timeLeft>0)pickWord()},70);
+   setTimeout(()=>{if(timeLeft>0)pickWord()},50);
  }else if(!isInputValid(v, current)){
    combo=0;$("answer").className="bad";$("feedback").textContent="もう一度！";
    $("combo").textContent="";
  }
 }
-function skip(){attempts++;combo=0;$("feedback").textContent="→ スキップ";setTimeout(()=>{if(timeLeft>0)pickWord()},70)}
+
+function skip(){
+ if(isProcessing) return;
+ attempts++;combo=0;$("feedback").textContent="→ スキップ";
+ setTimeout(()=>{if(timeLeft>0)pickWord()},70);
+}
+
 function endGame(){
  if(!timer)return; clearInterval(timer);timer=null;
  const elapsed=Math.max(1,(Date.now()-startedAt)/1000);
- const accuracy=attempts?Math.round(correct/attempts*100):0;
- const cpm=Math.round(correct?correct/elapsed*60:0);
- $("finalScore").textContent=score;$("finalCorrect").textContent=correct;
- $("finalAccuracy").textContent=accuracy+"%";$("finalCPM").textContent=cpm;$("finalCombo").textContent=maxCombo;
+ // 10秒あたりの文字数を算出
+ const speedPer10Sec = (totalChars / elapsed * 10).toFixed(1);
+ 
+ $("finalScore").textContent=totalChars;
+ $("finalChars").textContent=totalChars;
+ $("finalSpeed").textContent=speedPer10Sec;
+ $("finalCombo").textContent=maxCombo;
  show("resultScreen");
 }
+
+function goHome(){
+ clearInterval(timer);
+ timer=null;
+ show("startScreen");
+}
+
 document.querySelectorAll("[data-time]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-time]").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");duration=+b.dataset.time}));
-$("startBtn").addEventListener("click",startGame);$("retryBtn").addEventListener("click",startGame);$("homeBtn").addEventListener("click",()=>{clearInterval(timer);timer=null;show("startScreen")});
-$("answer").addEventListener("input",answerChanged);$("skipBtn").addEventListener("click",skip);
+$("startBtn").addEventListener("click",startGame);
+$("retryBtn").addEventListener("click",startGame);
+$("homeBtn").addEventListener("click",goHome);
+$("inGameHomeBtn").addEventListener("click",goHome);
+$("answer").addEventListener("input",answerChanged);
+$("skipBtn").addEventListener("click",skip);
 $("answer").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();skip()}});
 document.addEventListener("touchstart",()=>{}, {passive:true});
 </script>
