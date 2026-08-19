@@ -43,14 +43,14 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 </head>
 <body>
 <main class="app">
-<header><h1>?? フリックタイピング</h1><span class="badge">iPhone Safari版</span></header>
+<header><h1>📱 フリックタイピング</h1><span class="badge">iPhone Safari版</span></header>
 
 <section id="startScreen" class="screen active start">
 <div class="card">
 <h2>30秒で何文字打てる？</h2>
 <p>表示された日本語を、iPhoneの<strong>かなフリック入力</strong>で入力してください。正解するとすぐ次のお題へ進みます。</p>
 <div class="settings">
-<button data-time="30" class="selected">30秒</button><button data-time="60">60秒</button><button data-time="120">120秒</button>
+<button data-time="10">10秒</button><button data-time="30" class="selected">30秒</button><button data-time="60">60秒</button>
 </div>
 <button id="startBtn" class="primary">ゲームスタート</button>
 </div>
@@ -125,23 +125,23 @@ function startGame(){
 }
 function normalize(s){return s.trim().replace(/\s+/g,"")}
 
-// 濁点・半濁点・小文字を清音（標準文字）に変換するヘルパー関数
-function toBaseChar(ch){
- if(!ch) return "";
- return ch.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          .replace(/[ぁぃぅぇぉっゃゅょゎ]/g, c => String.fromCharCode(c.charCodeAt(0) + 1));
-}
-
-// 入力途中（未変換の清音状態）かどうかを検証する関数
-function isPartialMatch(input, target){
+// 「次の文字が打たれたタイミングで判定する」判定関数
+function isInputValid(input, target){
+ // 完全一致・前置一致ならOK
  if(target.startsWith(input)) return true;
- const len = input.length;
- if(len > target.length) return false;
  
- const prefixMatched = target.substring(0, len - 1) === input.substring(0, len - 1);
- const lastCharValid = toBaseChar(input[len - 1]) === toBaseChar(target[len - 1]);
+ // 入力長がお題より長い場合はNG
+ if(input.length > target.length) return false;
  
- return prefixMatched && lastCharValid;
+ // 確定済みの文字（末尾以外の文字）がお題と一致しているか確認
+ const confirmedInput = input.slice(0, -1);
+ const confirmedTarget = target.slice(0, input.length - 1);
+ 
+ // 末尾の1文字より前の部分で相違があればミス
+ if(confirmedInput !== confirmedTarget) return false;
+ 
+ // 末尾の1文字（入力途中の文字）は一旦エラーにせず許容する
+ return true;
 }
 
 function answerChanged(){
@@ -152,10 +152,10 @@ function answerChanged(){
  if(v===current){
    correct++;combo++;maxCombo=Math.max(maxCombo,combo);
    score += current.length*10 + Math.min(combo,20)*5;
-   $("answer").className="good";$("feedback").textContent="?? 正解！";
+   $("answer").className="good";$("feedback").textContent="🎉 正解！";
    updateStats();
    setTimeout(()=>{if(timeLeft>0)pickWord()},70);
- }else if(!isPartialMatch(v, current)){
+ }else if(!isInputValid(v, current)){
    combo=0;$("answer").className="bad";$("feedback").textContent="もう一度！";
    $("combo").textContent="";
  }
