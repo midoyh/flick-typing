@@ -37,6 +37,17 @@ button:active{transform:scale(.98)}
 .settings{display:flex;gap:8px;margin:12px 0}.settings button{height:42px;font-size:13px}.settings button.selected{outline:2px solid var(--accent);background:#075985}
 .result{text-align:center}.result .score{font-size:58px;font-weight:900;margin:8px 0;color:var(--gold)}
 .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.result-item{background:#0f172a;border-radius:14px;padding:13px 8px}.result-item small{display:block;color:var(--muted);font-size:11px}.result-item b{font-size:20px}
+
+/* ランキング関連CSS */
+.ranking-box{margin-top:18px;background:#0f172a;border-radius:16px;padding:14px;text-align:left;border:1px solid #334155}
+.ranking-box h3{margin:0 0 10px;font-size:15px;color:var(--accent);text-align:center}
+.ranking-list{list-style:none;padding:0;margin:0;font-family:monospace,sans-serif;font-size:13px;line-height:1.8}
+.ranking-item{display:flex;justify-content:space-between;padding:3px 6px;border-radius:6px;color:var(--muted)}
+.ranking-item.highlight{background:rgba(56,189,248,.18);color:#fff;font-weight:bold;border:1px solid var(--accent)}
+.full-ranking-container{max-height:360px;overflow-y:auto;padding-right:4px}
+.full-ranking-container::-webkit-scrollbar{width:6px}
+.full-ranking-container::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+
 footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 .hidden{display:none!important}
 </style>
@@ -53,6 +64,7 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 <button data-time="10">10秒</button><button data-time="30" class="selected">30秒</button><button data-time="60">60秒</button>
 </div>
 <button id="startBtn" class="primary">ゲームスタート</button>
+<button id="viewRankingBtn" style="margin-top:10px;">🏆 ランキングを見る</button>
 </div>
 </section>
 
@@ -87,9 +99,29 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 <div class="result-item"><small>文字/10秒</small><b id="finalSpeed">0</b></div>
 <div class="result-item"><small>最大コンボ</small><b id="finalCombo">0</b></div>
 </div>
+
+<!-- リザルト画面の近接ランキング表示 -->
+<div class="ranking-box">
+<h3>🏆 ランキング (今回周辺)</h3>
+<ul id="resultRankingList" class="ranking-list"></ul>
+</div>
+
 <div class="actions"><button id="retryBtn" class="primary">もう一度</button><button id="homeBtn">タイトルへ</button></div>
 </div>
 </section>
+
+<!-- 全体ランキング画面 -->
+<section id="rankingScreen" class="screen">
+<div class="card result">
+<h2>🏆 全体ランキング (TOP 50)</h2>
+<div id="rankingModeTitle" style="color:var(--muted);font-size:13px;margin-bottom:12px;">30秒モード</div>
+<div class="ranking-box full-ranking-container">
+<ul id="fullRankingList" class="ranking-list"></ul>
+</div>
+<div class="actions" style="margin-top:16px;"><button id="rankingBackBtn" class="primary">タイトルへ戻る</button></div>
+</div>
+</section>
+
 <footer>iPhoneでは「ホーム画面に追加」するとアプリのように遊べます。</footer>
 </main>
 
@@ -110,7 +142,7 @@ const WORDS = [
 const $=id=>document.getElementById(id);
 let duration=30,timeLeft=30,timer=null,current="",totalChars=0,correct=0,attempts=0,combo=0,maxCombo=0,startedAt=0;
 let lastIndex=-1;
-let isProcessing=false; // 連打・過剰発火防止フラグ
+let isProcessing=false;
 
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
 function pickWord(){
@@ -129,7 +161,6 @@ function startGame(){
 }
 function normalize(s){return s.trim().replace(/\s+/g,"")}
 
-// 「次の文字が打たれたタイミングで判定する」判定関数
 function isInputValid(input, target){
  if(target.startsWith(input)) return true;
  if(input.length > target.length) return false;
@@ -148,11 +179,11 @@ function answerChanged(){
  attempts++;
  
  if(v===current){
-   isProcessing = true; // 次のお題への切り替え中の処理重複を防ぐ
+   isProcessing = true;
    correct++;combo++;maxCombo=Math.max(maxCombo,combo);
-   totalChars += current.length; // 入力文字数を加算
+   totalChars += current.length;
    $("answer").className="good";
-   $("answer").value=""; // 即座に入力欄をクリア
+   $("answer").value="";
    updateStats();
    setTimeout(()=>{if(timeLeft>0)pickWord()},50);
  }else if(!isInputValid(v, current)){
@@ -167,16 +198,107 @@ function skip(){
  setTimeout(()=>{if(timeLeft>0)pickWord()},70);
 }
 
+// --- ランキング管理ロジック ---
+function getStorageKey(){
+ return `flick_typing_ranking_${duration}s`;
+}
+
+function loadRankings(){
+ const data = localStorage.getItem(getStorageKey());
+ return data ? JSON.parse(data) : [];
+}
+
+function saveRankings(rankings){
+ localStorage.setItem(getStorageKey(), JSON.stringify(rankings));
+}
+
+function formatDate(d){
+ const year = d.getFullYear();
+ const month = String(d.getMonth() + 1).padStart(2, '0');
+ const day = String(d.getDate()).padStart(2, '0');
+ return `${year}/${month}/${day}`;
+}
+
+function recordScore(chars){
+ const rankings = loadRankings();
+ const newRecord = {
+   chars: chars,
+   date: formatDate(new Date()),
+   id: Date.now() + Math.random() // 一意識別用ID
+ };
+ 
+ rankings.push(newRecord);
+ // 入力文字数が大きい順（同値なら古い順）にソート
+ rankings.sort((a,b) => b.chars - a.chars);
+ 
+ // 50位までに制限
+ const trimmed = rankings.slice(0, 50);
+ saveRankings(trimmed);
+ 
+ // 今回のスコアの順位（インデックス）を取得
+ const rankIndex = trimmed.findIndex(r => r.id === newRecord.id);
+ return { rankings: trimmed, myRankIndex: rankIndex };
+}
+
+function renderResultRanking(rankings, myRankIndex){
+ const listEl = $("resultRankingList");
+ listEl.innerHTML = "";
+ 
+ if(myRankIndex === -1){
+   // 50位圏外の場合
+   listEl.innerHTML = "<li class='ranking-item'>ランク外（TOP 50未満）</li>";
+   return;
+ }
+ 
+ // 前後を含めた5枠を表示する開始位置・終了位置の計算
+ let start = Math.max(0, myRankIndex - 2);
+ let end = Math.min(rankings.length, start + 5);
+ if (end - start < 5) {
+   start = Math.max(0, end - 5);
+ }
+ 
+ for(let i = start; i < end; i++){
+   const r = rankings[i];
+   const li = document.createElement("li");
+   li.className = "ranking-item" + (i === myRankIndex ? " highlight" : "");
+   li.innerHTML = `<span>${i + 1}位 ${r.date}</span><span>入力文字数 ${r.chars}</span>`;
+   listEl.appendChild(li);
+ }
+}
+
+function renderFullRanking(){
+ const rankings = loadRankings();
+ const listEl = $("fullRankingList");
+ $("rankingModeTitle").textContent = `${duration}秒モード`;
+ listEl.innerHTML = "";
+ 
+ if(rankings.length === 0){
+   listEl.innerHTML = "<li class='ranking-item' style='justify-content:center;'>まだ記録がありません</li>";
+   return;
+ }
+ 
+ rankings.forEach((r, i) => {
+   const li = document.createElement("li");
+   li.className = "ranking-item";
+   li.innerHTML = `<span>${i + 1}位 ${r.date}</span><span>入力文字数 ${r.chars}</span>`;
+   listEl.appendChild(li);
+ });
+}
+
 function endGame(){
  if(!timer)return; clearInterval(timer);timer=null;
  const elapsed=Math.max(1,(Date.now()-startedAt)/1000);
- // 10秒あたりの文字数を算出
  const speedPer10Sec = (totalChars / elapsed * 10).toFixed(1);
  
  $("finalScore").textContent=totalChars;
  $("finalChars").textContent=totalChars;
  $("finalSpeed").textContent=speedPer10Sec;
  $("finalCombo").textContent=maxCombo;
+ 
+ // スコア保存 & リザルト用ランキング描画
+ const { rankings, myRankIndex } = recordScore(totalChars);
+ renderResultRanking(rankings, myRankIndex);
+ 
  show("resultScreen");
 }
 
@@ -191,6 +313,8 @@ $("startBtn").addEventListener("click",startGame);
 $("retryBtn").addEventListener("click",startGame);
 $("homeBtn").addEventListener("click",goHome);
 $("inGameHomeBtn").addEventListener("click",goHome);
+$("viewRankingBtn").addEventListener("click",()=>{ renderFullRanking(); show("rankingScreen"); });
+$("rankingBackBtn").addEventListener("click",goHome);
 $("answer").addEventListener("input",answerChanged);
 $("skipBtn").addEventListener("click",skip);
 $("answer").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();skip()}});
