@@ -95,7 +95,7 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 <div id="finalScore" class="score">0</div>
 <div>入力文字数</div>
 <div class="result-grid">
-<div class="result-item"><small>入力文字数</small><b id="finalChars">0</b></div>
+<div class="result-item"><small>入力単語数</small><b id="finalWords">0</b></div>
 <div class="result-item"><small>文字/10秒</small><b id="finalSpeed">0</b></div>
 <div class="result-item"><small>最大コンボ</small><b id="finalCombo">0</b></div>
 </div>
@@ -224,18 +224,15 @@ function recordScore(chars){
  const newRecord = {
    chars: chars,
    date: formatDate(new Date()),
-   id: Date.now() + Math.random() // 一意識別用ID
+   id: Date.now() + Math.random()
  };
  
  rankings.push(newRecord);
- // 入力文字数が大きい順（同値なら古い順）にソート
  rankings.sort((a,b) => b.chars - a.chars);
  
- // 50位までに制限
  const trimmed = rankings.slice(0, 50);
  saveRankings(trimmed);
  
- // 今回のスコアの順位（インデックス）を取得
  const rankIndex = trimmed.findIndex(r => r.id === newRecord.id);
  return { rankings: trimmed, myRankIndex: rankIndex };
 }
@@ -245,12 +242,10 @@ function renderResultRanking(rankings, myRankIndex){
  listEl.innerHTML = "";
  
  if(myRankIndex === -1){
-   // 50位圏外の場合
    listEl.innerHTML = "<li class='ranking-item'>ランク外（TOP 50未満）</li>";
    return;
  }
  
- // 前後を含めた5枠を表示する開始位置・終了位置の計算
  let start = Math.max(0, myRankIndex - 2);
  let end = Math.min(rankings.length, start + 5);
  if (end - start < 5) {
@@ -291,11 +286,10 @@ function endGame(){
  const speedPer10Sec = (totalChars / elapsed * 10).toFixed(1);
  
  $("finalScore").textContent=totalChars;
- $("finalChars").textContent=totalChars;
+ $("finalWords").textContent=correct; // 単語数（正解数）を表示
  $("finalSpeed").textContent=speedPer10Sec;
  $("finalCombo").textContent=maxCombo;
  
- // スコア保存 & リザルト用ランキング描画
  const { rankings, myRankIndex } = recordScore(totalChars);
  renderResultRanking(rankings, myRankIndex);
  
