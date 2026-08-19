@@ -43,14 +43,14 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 </head>
 <body>
 <main class="app">
-<header><h1>⌨️ フリックタイピング</h1><span class="badge">iPhone Safari版</span></header>
+<header><h1>?? フリックタイピング</h1><span class="badge">iPhone Safari版</span></header>
 
 <section id="startScreen" class="screen active start">
 <div class="card">
-<h2>60秒で何文字打てる？</h2>
+<h2>30秒で何文字打てる？</h2>
 <p>表示された日本語を、iPhoneの<strong>かなフリック入力</strong>で入力してください。正解するとすぐ次のお題へ進みます。</p>
 <div class="settings">
-<button data-time="30">30秒</button><button data-time="60" class="selected">60秒</button><button data-time="120">120秒</button>
+<button data-time="30" class="selected">30秒</button><button data-time="60">60秒</button><button data-time="120">120秒</button>
 </div>
 <button id="startBtn" class="primary">ゲームスタート</button>
 </div>
@@ -58,7 +58,7 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 
 <section id="gameScreen" class="screen">
 <div class="stats">
-<div class="stat"><small>残り時間</small><b id="time">60</b></div>
+<div class="stat"><small>残り時間</small><b id="time">30</b></div>
 <div class="stat"><small>スコア</small><b id="score">0</b></div>
 <div class="stat"><small>正解</small><b id="correct">0</b></div>
 </div>
@@ -94,19 +94,19 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 <script>
 const WORDS = [
 "りんご","みかん","すいか","ぶどう","いちご","もも","ばなな","さくらんぼ","れもん","めろん",
-"とうきょう","よこはま","おおさか","きょうと","なごや","さっぽろ","ふくおか","おきなわ","ちば","まちだ",
+"とうきょう","よこはま","おおさか","きょうと","なごや","さっぽろ","ふくおか","おきなわ","ちば","まちだ","うらやす",
 "でんしゃ","えき","ひこうき","くるま","じてんしゃ","しんかんせん","ちかてつ","ばす","たくしー","ほてる",
 "ごはん","らーめん","すし","やきにく","おにぎり","たまごやき","からあげ","みそしる","かれーらいす","ぱすた",
-"ねこ","いぬ","うさぎ","ぱんだ","きつね","たぬき","さる","ぞう","きりん","ぺんぎん",
+"ねこ","いぬ","うさぎ","ぱんだ","きつね","たぬき","さる","ぞう","きりん","ぺんぎん","みどくん","ともやくん","きみちゃん","みどりかわ","すぎた",
 "たいよう","つき","ほし","そら","くもり","あめ","ゆき","かぜ","うみ","やま",
-"おんがく","えいが","げーむ","ほん","まんが","しゃしん","りょこう","さんぽ","すぽーつ","どらま",
+"おんがく","えいが","げーむ","ほん","まんが","しゃしん","りょこう","さんぽ","すぽーつ","どらま","あそべる？","できた？","めあど！",
 "あさごはん","ひるごはん","ばんごはん","のみもの","くだもの","やさい","ちょこれーと","あいすくりーむ","けーき","ぷりん",
 "きょう","あした","きのう","こんしゅう","らいしゅう","げつようび","すいようび","きんようび","どようび","にちようび",
-"ありがとう","おはよう","こんにちは","こんばんは","おやすみ","おめでとう","だいじょうぶ","がんばろう","たのしい","うれしい"
+"ありがとう","おはよう","こんにちは","こんばんは","おやすみ","おめでとう","だいじょうぶ？","がんばろ！","たのしい！","うれしい！"
 ];
 
 const $=id=>document.getElementById(id);
-let duration=60,timeLeft=60,timer=null,current="",score=0,correct=0,attempts=0,combo=0,maxCombo=0,startedAt=0;
+let duration=30,timeLeft=30,timer=null,current="",score=0,correct=0,attempts=0,combo=0,maxCombo=0,startedAt=0;
 let lastIndex=-1;
 
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
@@ -124,6 +124,26 @@ function startGame(){
  timer=setInterval(()=>{timeLeft--;updateStats();if(timeLeft<=0)endGame()},1000);
 }
 function normalize(s){return s.trim().replace(/\s+/g,"")}
+
+// 濁点・半濁点・小文字を清音（標準文字）に変換するヘルパー関数
+function toBaseChar(ch){
+ if(!ch) return "";
+ return ch.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .replace(/[ぁぃぅぇぉっゃゅょゎ]/g, c => String.fromCharCode(c.charCodeAt(0) + 1));
+}
+
+// 入力途中（未変換の清音状態）かどうかを検証する関数
+function isPartialMatch(input, target){
+ if(target.startsWith(input)) return true;
+ const len = input.length;
+ if(len > target.length) return false;
+ 
+ const prefixMatched = target.substring(0, len - 1) === input.substring(0, len - 1);
+ const lastCharValid = toBaseChar(input[len - 1]) === toBaseChar(target[len - 1]);
+ 
+ return prefixMatched && lastCharValid;
+}
+
 function answerChanged(){
  if(!current||timeLeft<=0)return;
  const v=normalize($("answer").value);
@@ -132,10 +152,10 @@ function answerChanged(){
  if(v===current){
    correct++;combo++;maxCombo=Math.max(maxCombo,combo);
    score += current.length*10 + Math.min(combo,20)*5;
-   $("answer").className="good";$("feedback").textContent="✓ 正解！";
+   $("answer").className="good";$("feedback").textContent="?? 正解！";
    updateStats();
    setTimeout(()=>{if(timeLeft>0)pickWord()},70);
- }else if(!current.startsWith(v)){
+ }else if(!isPartialMatch(v, current)){
    combo=0;$("answer").className="bad";$("feedback").textContent="もう一度！";
    $("combo").textContent="";
  }
