@@ -12,43 +12,44 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;background:linear-gradient(160deg,#0f172a,#111827);color:var(--text)}
 body{display:flex;justify-content:center}
-.app{width:100%;max-width:560px;min-height:100dvh;padding:max(18px,env(safe-area-inset-top)) 18px max(20px,env(safe-area-inset-bottom));display:flex;flex-direction:column}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-h1{font-size:22px;margin:0}.badge{font-size:12px;color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
-.stat{background:rgba(30,41,59,.9);border:1px solid #334155;border-radius:14px;padding:10px;text-align:center}
-.stat small{display:block;color:var(--muted);font-size:11px}.stat b{font-size:22px}
-.card{background:rgba(30,41,59,.96);border:1px solid #334155;border-radius:22px;padding:24px 18px;box-shadow:0 15px 40px rgba(0,0,0,.22)}
-#target{font-size:clamp(34px,10vw,54px);font-weight:800;text-align:center;letter-spacing:.08em;min-height:70px;display:flex;align-items:center;justify-content:center}
-#hint{text-align:center;color:var(--muted);font-size:13px;margin:4px 0 18px}
+/* キーボード表示時の見切れを防止するため、全体のPaddingや配置をコンパクトに調整 */
+.app{width:100%;max-width:560px;min-height:100dvh;padding:max(10px,env(safe-area-inset-top)) 14px max(10px,env(safe-area-inset-bottom));display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+h1{font-size:18px;margin:0}.badge{font-size:11px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat{background:rgba(30,41,59,.9);border:1px solid #334155;border-radius:12px;padding:6px;text-align:center}
+.stat small{display:block;color:var(--muted);font-size:10px}.stat b{font-size:18px}
+.card{background:rgba(30,41,59,.96);border:1px solid #334155;border-radius:18px;padding:16px 14px;box-shadow:0 15px 40px rgba(0,0,0,.22)}
+#target{font-size:clamp(28px,8vw,44px);font-weight:800;text-align:center;letter-spacing:.08em;min-height:50px;display:flex;align-items:center;justify-content:center}
+#hint{text-align:center;color:var(--muted);font-size:12px;margin:2px 0 10px}
 .input-wrap{position:relative}
-input{width:100%;height:58px;border:2px solid #475569;border-radius:15px;background:#0f172a;color:#fff;font-size:24px;text-align:center;outline:none;padding:0 14px;-webkit-appearance:none}
-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+input{width:100%;height:48px;border:2px solid #475569;border-radius:12px;background:#0f172a;color:#fff;font-size:20px;text-align:center;outline:none;padding:0 10px;-webkit-appearance:none}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
 input.good{border-color:var(--good)} input.bad{border-color:var(--bad)}
-.feedback{height:30px;text-align:center;padding-top:8px;font-weight:700;font-size:14px}
-#combo{color:var(--gold);text-align:center;height:28px;font-weight:800}
-.actions{display:flex;gap:10px;margin-top:16px}
-button{flex:1;height:52px;border:0;border-radius:15px;font-size:16px;font-weight:800;color:white;background:#475569}
+.feedback{height:24px;text-align:center;padding-top:4px;font-weight:700;font-size:13px}
+#combo{color:var(--gold);text-align:center;height:22px;font-weight:800;font-size:13px}
+.actions{display:flex;gap:8px;margin-top:10px}
+button{flex:1;height:44px;border:0;border-radius:12px;font-size:14px;font-weight:800;color:white;background:#475569}
 button.primary{background:linear-gradient(135deg,#0284c7,#2563eb)}
 button:active{transform:scale(.98)}
 .screen{display:none}.screen.active{display:block}
 .start{margin-top:auto;margin-bottom:auto}
-.start p{color:var(--muted);line-height:1.7}
-.settings{display:flex;gap:8px;margin:12px 0}.settings button{height:42px;font-size:13px}.settings button.selected{outline:2px solid var(--accent);background:#075985}
-.result{text-align:center}.result .score{font-size:58px;font-weight:900;margin:8px 0;color:var(--gold)}
-.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.result-item{background:#0f172a;border-radius:14px;padding:13px 8px}.result-item small{display:block;color:var(--muted);font-size:11px}.result-item b{font-size:20px}
+.start p{color:var(--muted);line-height:1.6;font-size:14px}
+.settings{display:flex;gap:8px;margin:12px 0}.settings button{height:38px;font-size:13px}.settings button.selected{outline:2px solid var(--accent);background:#075985}
+.result{text-align:center}.result .score{font-size:48px;font-weight:900;margin:6px 0;color:var(--gold)}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.result-item{background:#0f172a;border-radius:12px;padding:10px 6px}.result-item small{display:block;color:var(--muted);font-size:10px}.result-item b{font-size:18px}
 
 /* ランキング関連CSS */
-.ranking-box{margin-top:18px;background:#0f172a;border-radius:16px;padding:14px;text-align:left;border:1px solid #334155}
-.ranking-box h3{margin:0 0 10px;font-size:15px;color:var(--accent);text-align:center}
-.ranking-list{list-style:none;padding:0;margin:0;font-family:monospace,sans-serif;font-size:13px;line-height:1.8}
-.ranking-item{display:flex;justify-content:space-between;padding:3px 6px;border-radius:6px;color:var(--muted)}
+.ranking-box{margin-top:14px;background:#0f172a;border-radius:14px;padding:12px;text-align:left;border:1px solid #334155}
+.ranking-box h3{margin:0 0 8px;font-size:14px;color:var(--accent);text-align:center}
+.ranking-list{list-style:none;padding:0;margin:0;font-family:monospace,sans-serif;font-size:12px;line-height:1.7}
+.ranking-item{display:flex;justify-content:space-between;padding:2px 4px;border-radius:4px;color:var(--muted)}
 .ranking-item.highlight{background:rgba(56,189,248,.18);color:#fff;font-weight:bold;border:1px solid var(--accent)}
-.full-ranking-container{max-height:360px;overflow-y:auto;padding-right:4px}
+.full-ranking-container{max-height:280px;overflow-y:auto;padding-right:4px}
 .full-ranking-container::-webkit-scrollbar{width:6px}
 .full-ranking-container::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
 
-footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
+footer{text-align:center;color:#64748b;font-size:10px;margin-top:10px}
 .hidden{display:none!important}
 </style>
 </head>
@@ -76,7 +77,7 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 </div>
 <div class="card">
 <div id="target">スタート！</div>
-<div id="hint">お題をフリック入力</div>
+<div id="hint">文字を入力するとタイマースタート</div>
 <div class="input-wrap">
 <input id="answer" type="text" inputmode="kana" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="done" aria-label="回答入力">
 </div>
@@ -127,7 +128,6 @@ footer{text-align:center;color:#64748b;font-size:11px;margin-top:16px}
 
 <script>
 const WORDS = [
-  // 既存の単語
   "りんご","みかん","すいか","ぶどう","いちご","もも","ばなな","さくらんぼ","れもん","めろん",
   "とうきょう","よこはま","おおさか","きょうと","なごや","さっぽろ","ふくおか","おきなわ","ちば","まちだ","うらやす",
   "でんしゃ","えき","ひこうき","くるま","じてんしゃ","しんかんせん","ちかてつ","ばす","たくしー","ほてる",
@@ -158,8 +158,10 @@ const $=id=>document.getElementById(id);
 let duration=30,timeLeft=30,timer=null,current="",totalChars=0,correct=0,attempts=0,combo=0,maxCombo=0,startedAt=0;
 let lastIndex=-1;
 let isProcessing=false;
+let isTimerStarted=false; // タイマー開始フラグ
 
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
+
 function pickWord(){
  isProcessing = false;
  let i; do{i=Math.floor(Math.random()*WORDS.length)}while(i===lastIndex&&WORDS.length>1);
@@ -167,13 +169,36 @@ function pickWord(){
  $("answer").value=""; $("feedback").textContent=""; $("answer").className="";
  $("combo").textContent=combo>=2?`${combo} COMBO`:"";
 }
+
 function updateStats(){$("time").textContent=timeLeft;$("totalChars").textContent=totalChars;$("correct").textContent=correct}
-function startGame(){
- clearInterval(timer); timeLeft=duration;totalChars=0;correct=0;attempts=0;combo=0;maxCombo=0;lastIndex=-1;startedAt=Date.now();
- show("gameScreen");updateStats();pickWord();
- setTimeout(()=>{$("answer").focus()},100);
- timer=setInterval(()=>{timeLeft--;updateStats();if(timeLeft<=0)endGame()},1000);
+
+function startTimer(){
+ if(isTimerStarted) return;
+ isTimerStarted = true;
+ startedAt = Date.now();
+ $("hint").textContent = "お題をフリック入力";
+ timer=setInterval(()=>{
+   timeLeft--;
+   updateStats();
+   if(timeLeft<=0) endGame();
+ },1000);
 }
+
+function startGame(){
+ clearInterval(timer);
+ timer=null;
+ isTimerStarted = false;
+ timeLeft=duration;totalChars=0;correct=0;attempts=0;combo=0;maxCombo=0;lastIndex=-1;
+ show("gameScreen");
+ updateStats();
+ pickWord();
+ $("hint").textContent = "1文字入力でカウントダウン開始";
+ 
+ // iPhone等で自動キーボード表示させるため、ユーザーのボタンクリックイベント内で即座にfocus実行
+ const inputEl = $("answer");
+ inputEl.focus();
+}
+
 function normalize(s){return s.trim().replace(/\s+/g,"")}
 
 function isInputValid(input, target){
@@ -191,24 +216,33 @@ function answerChanged(){
  if(!current||timeLeft<=0||isProcessing)return;
  const v=normalize($("answer").value);
  if(v==="")return;
+
+ // 1文字目入力時にタイマースタート
+ if(!isTimerStarted){
+   startTimer();
+ }
+
  attempts++;
  
  if(v===current){
-   isProcessing = true;
-   correct++;combo++;maxCombo=Math.max(maxCombo,combo);
-   totalChars += current.length;
-   $("answer").className="good";
-   $("answer").value="";
-   updateStats();
-   setTimeout(()=>{if(timeLeft>0)pickWord()},50);
+    isProcessing = true;
+    correct++;combo++;maxCombo=Math.max(maxCombo,combo);
+    totalChars += current.length;
+    $("answer").className="good";
+    $("answer").value="";
+    updateStats();
+    setTimeout(()=>{if(timeLeft>0)pickWord()},50);
  }else if(!isInputValid(v, current)){
-   combo=0;$("answer").className="bad";$("feedback").textContent="もう一度！";
-   $("combo").textContent="";
+    combo=0;$("answer").className="bad";$("feedback").textContent="もう一度！";
+    $("combo").textContent="";
  }
 }
 
 function skip(){
  if(isProcessing) return;
+ if(!isTimerStarted){
+   startTimer();
+ }
  attempts++;combo=0;$("feedback").textContent="→ スキップ";
  setTimeout(()=>{if(timeLeft>0)pickWord()},70);
 }
@@ -237,9 +271,9 @@ function formatDate(d){
 function recordScore(chars){
  const rankings = loadRankings();
  const newRecord = {
-   chars: chars,
-   date: formatDate(new Date()),
-   id: Date.now() + Math.random()
+    chars: chars,
+    date: formatDate(new Date()),
+    id: Date.now() + Math.random()
  };
  
  rankings.push(newRecord);
@@ -257,22 +291,22 @@ function renderResultRanking(rankings, myRankIndex){
  listEl.innerHTML = "";
  
  if(myRankIndex === -1){
-   listEl.innerHTML = "<li class='ranking-item'>ランク外（TOP 50未満）</li>";
-   return;
+    listEl.innerHTML = "<li class='ranking-item'>ランク外（TOP 50未満）</li>";
+    return;
  }
  
  let start = Math.max(0, myRankIndex - 2);
  let end = Math.min(rankings.length, start + 5);
  if (end - start < 5) {
-   start = Math.max(0, end - 5);
+    start = Math.max(0, end - 5);
  }
  
  for(let i = start; i < end; i++){
-   const r = rankings[i];
-   const li = document.createElement("li");
-   li.className = "ranking-item" + (i === myRankIndex ? " highlight" : "");
-   li.innerHTML = `<span>${i + 1}位 ${r.date}</span><span>入力文字数 ${r.chars}</span>`;
-   listEl.appendChild(li);
+    const r = rankings[i];
+    const li = document.createElement("li");
+    li.className = "ranking-item" + (i === myRankIndex ? " highlight" : "");
+    li.innerHTML = `<span>${i + 1}位 ${r.date}</span><span>入力文字数 ${r.chars}</span>`;
+    listEl.appendChild(li);
  }
 }
 
@@ -283,25 +317,28 @@ function renderFullRanking(){
  listEl.innerHTML = "";
  
  if(rankings.length === 0){
-   listEl.innerHTML = "<li class='ranking-item' style='justify-content:center;'>まだ記録がありません</li>";
-   return;
+    listEl.innerHTML = "<li class='ranking-item' style='justify-content:center;'>まだ記録がありません</li>";
+    return;
  }
  
  rankings.forEach((r, i) => {
-   const li = document.createElement("li");
-   li.className = "ranking-item";
-   li.innerHTML = `<span>${i + 1}位 ${r.date}</span><span>入力文字数 ${r.chars}</span>`;
-   listEl.appendChild(li);
+    const li = document.createElement("li");
+    li.className = "ranking-item";
+    li.innerHTML = `<span>${i + 1}位 ${r.date}</span><span>入力文字数 ${r.chars}</span>`;
+    listEl.appendChild(li);
  });
 }
 
 function endGame(){
- if(!timer)return; clearInterval(timer);timer=null;
- const elapsed=Math.max(1,(Date.now()-startedAt)/1000);
+ if(timer) clearInterval(timer);
+ timer=null;
+ $("answer").blur(); // 入力フォーカスを解除してキーボードを閉じる
+ 
+ const elapsed=Math.max(1,(Date.now()-(startedAt||Date.now()))/1000);
  const speedPer10Sec = (totalChars / elapsed * 10).toFixed(1);
  
  $("finalScore").textContent=totalChars;
- $("finalWords").textContent=correct; // 単語数（正解数）を表示
+ $("finalWords").textContent=correct;
  $("finalSpeed").textContent=speedPer10Sec;
  $("finalCombo").textContent=maxCombo;
  
@@ -314,6 +351,7 @@ function endGame(){
 function goHome(){
  clearInterval(timer);
  timer=null;
+ $("answer").blur();
  show("startScreen");
 }
 
