@@ -35,7 +35,12 @@ button:active{transform:scale(.98)}
 .screen{display:none}.screen.active{display:block}
 .start{margin-top:auto;margin-bottom:auto}
 .start p{color:var(--muted);line-height:1.6;font-size:14px}
+.start-title{font-size:18px;margin:8px 0 10px;text-align:center;line-height:1.25}
 .settings{display:flex;gap:8px;margin:12px 0}.settings button{height:38px;font-size:13px}.settings button.selected{outline:2px solid var(--accent);background:#075985}
+.mode-setting button{height:42px;font-size:12px;line-height:1.1;padding:0 3px;white-space:nowrap;letter-spacing:-.03em}
+.start-actions{margin-top:12px;margin-bottom:0}
+.start-actions button{height:42px;font-size:13px;padding:0 5px}
+
 .result{text-align:center}.result .score{font-size:48px;font-weight:900;margin:6px 0;color:var(--gold)}
 .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.result-item{background:#0f172a;border-radius:12px;padding:10px 6px}.result-item small{display:block;color:var(--muted);font-size:10px}.result-item b{font-size:18px}
 
@@ -55,17 +60,18 @@ footer{text-align:center;color:#64748b;font-size:10px;margin-top:10px}
 </head>
 <body>
 <main class="app">
-<header><h1>📱 フリックタイピング</h1><span class="badge">iPhone Safari版</span></header>
+<header><h1>フリックタイピングv2026/10/18</h1><span class="badge">iPhone Safari版</span></header>
 
 <section id="startScreen" class="screen active start">
 <div class="card">
-<h2>30秒で何文字打てる？</h2>
-<p>表示された日本語を、iPhoneの<strong>かなフリック入力</strong>で入力してください。正解するとすぐ次のお題へ進みます。</p>
-<div class="settings">
-<button data-time="10">10秒</button><button data-time="30" class="selected">30秒</button><button data-time="60">60秒</button>
+<h2 class="start-title">みどフリックv2026/10/18</h2>
+<div class="settings mode-setting" aria-label="出題モード">
+<button type="button" data-mode="normal" class="selected">30秒</button><button type="button" data-mode="challenge">30秒(記号数字なしver)</button>
 </div>
+<div class="settings start-actions">
 <button id="startBtn" class="primary">ゲームスタート</button>
-<button id="viewRankingBtn" style="margin-top:10px;">🏆 ランキングを見る</button>
+<button id="viewRankingBtn">　 ランキングを見る</button>
+</div>
 </div>
 </section>
 
@@ -103,7 +109,7 @@ footer{text-align:center;color:#64748b;font-size:10px;margin-top:10px}
 
 <!-- リザルト画面の近接ランキング表示 -->
 <div class="ranking-box">
-<h3>🏆 ランキング (今回周辺)</h3>
+<h3>　 ランキング (今回周辺)</h3>
 <ul id="resultRankingList" class="ranking-list"></ul>
 </div>
 
@@ -114,7 +120,7 @@ footer{text-align:center;color:#64748b;font-size:10px;margin-top:10px}
 <!-- 全体ランキング画面 -->
 <section id="rankingScreen" class="screen">
 <div class="card result">
-<h2>🏆 全体ランキング (TOP 50)</h2>
+<h2>　 全体ランキング (TOP 50)</h2>
 <div id="rankingModeTitle" style="color:var(--muted);font-size:13px;margin-bottom:12px;">30秒モード</div>
 <div class="ranking-box full-ranking-container">
 <ul id="fullRankingList" class="ranking-list"></ul>
@@ -127,45 +133,60 @@ footer{text-align:center;color:#64748b;font-size:10px;margin-top:10px}
 </main>
 
 <script>
-const WORDS = [
-  "りんご","みかん","すいか","ぶどう","いちご","もも","ばなな","さくらんぼ","れもん","めろん",
-  "とうきょう","よこはま","おおさか","きょうと","なごや","さっぽろ","ふくおか","おきなわ","ちば","まちだ","うらやす",
-  "でんしゃ","えき","ひこうき","くるま","じてんしゃ","しんかんせん","ちかてつ","ばす","たくしー","ほてる",
-  "ごはん","らーめん","すし","やきにく","おにぎり","たまごやき","からあげ","みそしる","かれーらいす","ぱすた",
-  "ねこ","いぬ","うさぎ","ぱんだ","きつね","たぬき","さる","ぞう","きりん","ぺんぎん","みどくん","ともやくん","きみちゃん","みどりかわ","すぎた",
-  "たいよう","つき","ほし","そら","くもり","あめ","ゆき","かぜ","うみ","やま",
-  "おんがく","えいが","げーむ","ほん","まんが","しゃしん","りょこう","さんぽ","すぽーつ","どらま","あそべる？","できた？","めあど！",
-  "あさごはん","ひるごはん","ばんごはん","のみもの","くだもの","やさい","ちょこれーと","あいすくりーむ","けーき","ぷりん",
-  "きょう","あした","きのう","こんしゅう","らいしゅう","げつようび","すいようび","きんようび","どようび","にちようび",
-  "ありがとう","おはよう","こんにちは","こんばんは","おやすみ","おめでとう","だいじょうぶ？","がんばろ！","たのしい！","うれしい！",
-  "おつかれ！","またねー","まじで？","よろしくね","ほんと？",
-  "いいね！","やばい！","なるほどー","わかるー","どうしたの？",
-  "おねがい","ごめんね","どうぞー","すき！","さいこう！",
-  "すまほ","こんびに","かふぇ","いやほん","あぷり",
-  "おやつ","じゅーす","おふろ","おうち","おさんぽ",
-  "おかいもの","おどうぐ","おべんとう","おかし","おそうじ",
-  "どこいく？","なにする？","いつひま？","もうつくよ","いまどこ？",
-  "ねむいー","おなかすいた","のどかわいた","つかれたー","ひまー",
-  "あついね","さむいね","たのしみ！","うれしいー","びっくり！",
-  "えーっと","まぁいいか","やっぱり","ちょっとまって","またあとで",
-  "1994.06.28","2000.10.04","1がつ","2がつ","3がつ",
-  "4がつ","5がつ","6がつ","7がつ","8がつ",
-  "9がつ","10がつ","11がつ","12がつ","2026ねん",
-  "え、まって！","がんばる","らいん"
+const SYMBOL_NUMBER_WORDS = [
+  "あそべる？","できた？","めあど！","だいじょうぶ？","がんばろ！","たのしい！","うれしい！","おつかれ！",
+  "まじで？","ほんと？","いいね！","やばい！","どうしたの？","すき！","さいこう！","どこいく？",
+  "なにする？","いつひま？","いまどこ？","たのしみ！","びっくり！","1994.06.28","2000.10.04","1がつ",
+  "2がつ","3がつ","4がつ","5がつ","6がつ","7がつ","8がつ","9がつ",
+  "10がつ","11がつ","12がつ","2026ねん","え、まって！"
 ];
+
+const CHALLENGE_WORDS = [
+  "りんご","みかん","すいか","ぶどう","いちご","もも","ばなな","さくらんぼ",
+  "れもん","めろん","とうきょう","よこはま","おおさか","きょうと","なごや","さっぽろ",
+  "ふくおか","おきなわ","ちば","まちだ","うらやす","でんしゃ","えき","ひこうき",
+  "くるま","じてんしゃ","しんかんせん","ちかてつ","ばす","たくしー","ほてる","ごはん",
+  "らーめん","すし","やきにく","おにぎり","たまごやき","からあげ","みそしる","かれーらいす",
+  "ぱすた","ねこ","いぬ","うさぎ","ぱんだ","きつね","たぬき","さる",
+  "ぞう","きりん","ぺんぎん","みどくん","ともやくん","きみちゃん","みどりかわ","すぎた",
+  "たいよう","つき","ほし","そら","くもり","あめ","ゆき","かぜ",
+  "うみ","やま","おんがく","えいが","げーむ","ほん","まんが","しゃしん",
+  "りょこう","さんぽ","すぽーつ","どらま","あさごはん","ひるごはん","ばんごはん","のみもの",
+  "くだもの","やさい","ちょこれーと","あいすくりーむ","けーき","ぷりん","きょう","あした",
+  "きのう","こんしゅう","らいしゅう","げつようび","すいようび","きんようび","どようび","にちようび",
+  "ありがとう","おはよう","こんにちは","こんばんは","おやすみ","おめでとう","またねー","よろしくね",
+  "なるほどー","わかるー","おねがい","ごめんね","どうぞー","すまほ","こんびに","かふぇ",
+  "いやほん","あぷり","おやつ","じゅーす","おふろ","おうち","おさんぽ","おかいもの",
+  "おどうぐ","おべんとう","おかし","おそうじ","もうつくよ","ねむいー","おなかすいた","のどかわいた",
+  "つかれたー","ひまー","あついね","さむいね","うれしいー","えーっと","まぁいいか","やっぱり",
+  "ちょっとまって","またあとで","がんばる","らいん"
+];
+
+// 30秒モードは通常の単語と、記号・数字を含むお題の両方を出題する
+const NORMAL_WORDS = [...CHALLENGE_WORDS, ...SYMBOL_NUMBER_WORDS];
 
 const $=id=>document.getElementById(id);
 let duration=30,timeLeft=30,timer=null,current="",totalChars=0,correct=0,attempts=0,combo=0,maxCombo=0,startedAt=0;
+let mode="normal";
 let lastIndex=-1;
 let isProcessing=false;
 let isTimerStarted=false; // タイマー開始フラグ
 
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active")}
 
+function getWords(){
+ return mode === "challenge" ? CHALLENGE_WORDS : NORMAL_WORDS;
+}
+
+function getModeLabel(){
+ return mode === "challenge" ? "30秒(記号数字なしver)" : "30秒";
+}
+
 function pickWord(){
  isProcessing = false;
- let i; do{i=Math.floor(Math.random()*WORDS.length)}while(i===lastIndex&&WORDS.length>1);
- lastIndex=i; current=WORDS[i]; $("target").textContent=current;
+ const words = getWords();
+ let i; do{i=Math.floor(Math.random()*words.length)}while(i===lastIndex&&words.length>1);
+ lastIndex=i; current=words[i]; $("target").textContent=current;
  $("answer").value=""; $("feedback").textContent=""; $("answer").className="";
  $("combo").textContent=combo>=2?`${combo} COMBO`:"";
 }
@@ -249,7 +270,7 @@ function skip(){
 
 // --- ランキング管理ロジック ---
 function getStorageKey(){
- return `flick_typing_ranking_${duration}s`;
+ return `flick_typing_ranking_${mode}_${duration}s`;
 }
 
 function loadRankings(){
@@ -289,6 +310,7 @@ function recordScore(chars){
 function renderResultRanking(rankings, myRankIndex){
  const listEl = $("resultRankingList");
  listEl.innerHTML = "";
+ $("resultRankingList").previousElementSibling.textContent = `　 ランキング（${getModeLabel()}・今回周辺）`;
  
  if(myRankIndex === -1){
     listEl.innerHTML = "<li class='ranking-item'>ランク外（TOP 50未満）</li>";
@@ -313,7 +335,7 @@ function renderResultRanking(rankings, myRankIndex){
 function renderFullRanking(){
  const rankings = loadRankings();
  const listEl = $("fullRankingList");
- $("rankingModeTitle").textContent = `${duration}秒モード`;
+ $("rankingModeTitle").textContent = getModeLabel();
  listEl.innerHTML = "";
  
  if(rankings.length === 0){
@@ -355,7 +377,12 @@ function goHome(){
  show("startScreen");
 }
 
-document.querySelectorAll("[data-time]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-time]").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");duration=+b.dataset.time}));
+document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{
+ document.querySelectorAll("[data-mode]").forEach(x=>x.classList.remove("selected"));
+ b.classList.add("selected");
+ mode=b.dataset.mode;
+ lastIndex=-1;
+}));
 $("startBtn").addEventListener("click",startGame);
 $("retryBtn").addEventListener("click",startGame);
 $("homeBtn").addEventListener("click",goHome);
